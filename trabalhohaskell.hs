@@ -53,5 +53,5 @@ precedence _ = 0
 
 main :: IO ()
 main = do
-  let resultado = avalia "2.3+3.5"
+  let resultado = avalia "2+5.6"
   putStrLn $ "Resultado: " ++ show resultado
