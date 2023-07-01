@@ -9,10 +9,10 @@ tokenize (x : xs)
   | isDigit x || x == '.' =
       let (num, rest) = span (\c -> isDigit c || c == '.') (x : xs)
        in case reads num of
-            [(n, "")] -> (NumToken n :) <$> tokenize rest
-            _ -> Left $ "Número inválido: " ++ num
-  | not (isOperator x) = Left $ "Caractere inválido: " ++ [x]
-  | otherwise = (OperatorToken x :) <$> tokenize xs
+            [(n, "")] -> fmap (NumToken n :) (tokenize rest)
+            _ -> Left ("Número inválido: " ++ num)
+  | not (isOperator x) = Left ("Caractere inválido: " ++ [x])
+  | otherwise = fmap (OperatorToken x :) (tokenize xs)
   where
     isOperator c = c `elem` "+-*/()"
 
@@ -28,9 +28,9 @@ avalia expressao = do
         else avaliaPostfix postfix []
 
 toPostfix :: [Token] -> Either String [Token]
-toPostfix tokens = reverse <$> exec tokens [] []
+toPostfix tokens = fmap reverse (exec tokens [] [])
   where
-    exec [] pilha saida = Right $ pilha ++ saida
+    exec [] pilha saida = Right (pilha ++ saida)
     exec (NumToken n : ts) pilha saida = exec ts pilha (NumToken n : saida)
     exec (OperatorToken o : ts) pilha saida
       | o == '(' = exec ts (OperatorToken o : pilha) saida
@@ -52,11 +52,11 @@ avaliaPostfix (OperatorToken o : ts) pilha = do
 
 aplicaOperador :: Char -> [Double] -> Either String [Double]
 aplicaOperador o (b : a : pilha) = case o of
-  '+' -> Right $ (a + b) : pilha
-  '-' -> Right $ (a - b) : pilha
-  '*' -> Right $ (a * b) : pilha
-  '/' -> Right $ (a / b) : pilha
-  _ -> Left $ "Operador inválido: " ++ [o]
+  '+' -> Right ((a + b) : pilha)
+  '-' -> Right ((a - b) : pilha)
+  '*' -> Right ((a * b) : pilha)
+  '/' -> Right ((a / b) : pilha)
+  _ -> Left ("Operador inválido: " ++ [o])
 aplicaOperador _ pilha = Right pilha
 
 precedence :: Char -> Int
@@ -70,5 +70,5 @@ main :: IO ()
 main = do
   let expressao = "((((2.3 + 5.5) * 2)))"
   case avalia expressao of
-    Right resultado -> putStrLn $ "Resultado: " ++ show resultado
-    Left erro -> putStrLn $ "Erro: " ++ erro
+    Right resultado -> putStrLn ("Resultado: " ++ show resultado)
+    Left erro -> putStrLn ("Erro: " ++ erro)
